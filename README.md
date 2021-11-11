@@ -22,7 +22,7 @@ local Library = require(path_to_module)
 -- local HttpService = game:GetService("HttpService")
 -- local Library = loadstring(HttpService:GetAsync("https://raw.githubusercontent.com/WhoIsDanix/Andronema/master/main.lua"))
 
-local window = Library:Create("Window Title")
+local window = Library:Create("Window Title", nil, false)
 local tab = window:CreateTab("Tab Title")
 
 tab:CreateLabel("Hello World!")
