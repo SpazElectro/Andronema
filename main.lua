@@ -42,18 +42,48 @@ local function util_lerp(a, b, f)
 	return a + f * (b - a)
 end
 
+export type WindowType = {
+	Create: typeof(Window.Create),
+	CreateTab: typeof(Window.CreateTab),
+	IsDestroyed: typeof(Window.IsDestroyed)
+}
+
+export type TabType = {
+	CreateLabel: typeof(Tab.CreateLabel),
+	CreateButton: typeof(Tab.CreateButton),
+	CreateToggle: typeof(Tab.CreateToggle),
+	CreateSlider: typeof(Tab.CreateSlider),
+	CreateTextBox: typeof(Tab.CreateTextBox),
+}
+
+export type LabelType = {
+	Update: typeof(Label.Update)
+}
+
+export type ToggleType = {
+	SetState: typeof(Toggle.SetState)
+}
+
+export type SliderType = {
+	SetValue: typeof(Slider.SetValue)
+}
+
+export type TextBoxType = {
+	SetText: typeof(TextBox.SetText)
+}
+
 local GUI_NAME = "Andronema"
 
-function Window:Create(title, theme, coreGui)
+function Window:Create(title: string, theme, coreGui)
 	if coreGui == nil then coreGui = true end
-	
+
 	local parent = coreGui and game.CoreGui or game.Players.LocalPlayer:WaitForChild("PlayerGui")
 	local colors
-	
+
 	if parent:FindFirstChild(GUI_NAME) then
 		parent[GUI_NAME]:Destroy()
 	end
-	
+
 	if typeof(theme) == "table" then
 		colors = theme
 	elseif typeof(theme) == "string" then
@@ -61,33 +91,33 @@ function Window:Create(title, theme, coreGui)
 	else
 		colors = BuiltInThemes.Moonlight
 	end
-	
+
 	local screenGui = Instance.new("ScreenGui")
 	local mainFrame = Instance.new("Frame")
 	local mainFrameUICorner = Instance.new("UICorner")
 	local mainFrameShadow = Instance.new("ImageLabel")
-	
+
 	local topBarFrame = Instance.new("Frame")
 	local topBarUICorner = Instance.new("UICorner")
 	local titleTextLabel = Instance.new("TextLabel")
 	local closeImageButton = Instance.new("ImageButton")
-	
+
 	local tabBarFrame = Instance.new("ScrollingFrame")
 	local tabBarFrameUICorner = Instance.new("UICorner")
 	local tabBarFrameUIGridLayout = Instance.new("UIGridLayout")
-	
+
 	local tabs = Instance.new("Folder")
-	
+
 	mainFrame.Name = "Main"
 	mainFrame.Parent = screenGui
 	mainFrame.BackgroundColor3 = colors.MainFrame
 	mainFrame.BorderSizePixel = 0
 	mainFrame.Position = UDim2.new(0.393801957, 0, 0.326380372, 0)
 	mainFrame.Size = UDim2.new(0, 404, 0, 282)
-	
+
 	mainFrameUICorner.CornerRadius = UDim.new(0.0199999996, 1)
 	mainFrameUICorner.Parent = mainFrame
-	
+
 	mainFrameShadow.Name = "Shadow"
 	mainFrameShadow.Parent = mainFrame
 	mainFrameShadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -138,26 +168,26 @@ function Window:Create(title, theme, coreGui)
 	tabBarFrameUIGridLayout.Parent = tabBarFrame
 	tabBarFrameUIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	tabBarFrameUIGridLayout.CellSize = UDim2.new(0, 90, 0, 20)
-	
+
 	tabBarFrameUIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		tabBarFrame.CanvasSize = UDim2.fromOffset(tabBarFrameUIGridLayout.AbsoluteContentSize.X, 0)
 	end)
-	
+
 	tabs.Name = "Tabs"
 	tabs.Parent = mainFrame
-	
+
 	local dragToggle = nil
 	local dragSpeed = .5
 	local dragInput = nil
 	local dragStart = nil
 	local dragPos = nil
 
-	mainFrame.InputBegan:Connect(function(input)
+	mainFrame.InputBegan:Connect(function(input: InputObject)
 		if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
 			dragToggle = true
 			dragStart = input.Position
 			dragPos = mainFrame.Position
-			
+
 			input.Changed:Connect(function()
 				if (input.UserInputState == Enum.UserInputState.End) then
 					dragToggle = false
@@ -166,24 +196,24 @@ function Window:Create(title, theme, coreGui)
 		end
 	end)
 
-	mainFrame.InputChanged:Connect(function(input)
+	mainFrame.InputChanged:Connect(function(input: InputObject)
 		if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			dragInput = input
 		end
 	end)
 
-	game:GetService("UserInputService").InputChanged:Connect(function(input)
+	game:GetService("UserInputService").InputChanged:Connect(function(input: InputObject)
 		if (input == dragInput and dragToggle) then
 			local Delta = input.Position - dragStart
 			local Position = UDim2.new(dragPos.X.Scale, dragPos.X.Offset + Delta.X, dragPos.Y.Scale, dragPos.Y.Offset + Delta.Y)
 			game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(.25), {Position = Position}):Play()
 		end
 	end)
-	
+
 	closeImageButton.MouseButton1Click:Connect(function()
 		screenGui:Destroy()
 	end)
-	
+
 	screenGui.Parent = parent
 	return setmetatable({screenGui = screenGui, colors = colors}, Window)
 end
@@ -192,12 +222,12 @@ function Window:IsDestroyed()
 	return not self.screenGui
 end
 
-function Window:CreateTab(title)
+function Window:CreateTab(title: string)
 	local tab = Instance.new("ScrollingFrame")
 	local tabUIGridLayout = Instance.new("UIGridLayout")
 	local tabTextButton = Instance.new("TextButton")
 	local tabTextButtonUICorner = Instance.new("UICorner")
-	
+
 	tab.Name = "Tab"
 	tab.Active = true
 	tab.BackgroundTransparency = 1
@@ -206,15 +236,15 @@ function Window:CreateTab(title)
 	tab.Size = UDim2.new(0, 387, 0, 215)
 	tab.ScrollBarThickness = 3
 	tab.Visible = false
-	
+
 	tabUIGridLayout.Parent = tab
 	tabUIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	tabUIGridLayout.CellSize = UDim2.new(0, 376, 0, 25)
-	
+
 	tabUIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		tab.CanvasSize = UDim2.fromOffset(tabUIGridLayout.AbsoluteContentSize.X, tabUIGridLayout.AbsoluteContentSize.Y)
 	end)
-	
+
 	tabTextButton.BackgroundColor3 = Color3.fromRGB(67, 67, 95)
 	tabTextButton.BackgroundTransparency = 1.000
 	tabTextButton.BorderColor3 = Color3.fromRGB(27, 42, 53)
@@ -227,38 +257,38 @@ function Window:CreateTab(title)
 
 	tabTextButtonUICorner.CornerRadius = UDim.new(0.09, 1)
 	tabTextButtonUICorner.Parent = tabTextButton
-	
+
 	local tabindex = #self.screenGui.Main.Tabs:GetChildren() + 1
-	
+
 	tabTextButton.MouseButton1Click:Connect(function()
 		self:__SetCurrentTab(tabindex)
 	end)
-	
+
 	tabTextButton.Parent = self.screenGui.Main.TabBar
 	tab.Parent = self.screenGui.Main.Tabs
-	
+
 	if self.currentTab == nil then
 		self:__SetCurrentTab(1)
 	end
-	
+
 	return setmetatable({frame = tab, colors = self.colors}, Tab)
 end
 
-function Window:__SetCurrentTab(tabindex)
+function Window:__SetCurrentTab(tabindex: number)
 	if self.currentTab then
 		self.currentTab.Visible = false
 	end
-	
+
 	self.currentTab = self.screenGui.Main.Tabs:GetChildren()[tabindex]
 	self.currentTab.Visible = true
 end
 
-function Tab:CreateLabel(text, highlight)
+function Tab:CreateLabel(text: string, highlight: boolean)
 	local label = Instance.new("Frame")
 	local labelUICorner = Instance.new("UICorner")
 	local labelTextLabel = Instance.new("TextLabel")
 	local labelImage = Instance.new("ImageLabel")
-	
+
 	label.Name = "Label"
 	label.BackgroundColor3 = highlight and self.colors.LabelHighlighted or self.colors.Label
 	label.Position = UDim2.new(0, 0, -0.0141843967, 0)
@@ -286,21 +316,21 @@ function Tab:CreateLabel(text, highlight)
 	labelImage.Size = UDim2.new(0, 19, 0, 19)
 	labelImage.Image = "http://www.roblox.com/asset/?id=6035078890"
 	labelImage.ImageTransparency = 0.300
-	
+
 	label.Parent = self.frame
 	return setmetatable({label = label}, Label)
 end
 
-function Label:Update(newtext)
+function Label:Update(newtext: string)
 	self.label.TextLabel.Text = newtext
 end
 
-function Tab:CreateButton(text, callback)
+function Tab:CreateButton(text: string, callback)
 	local button = Instance.new("TextButton")
 	local buttonUICorner = Instance.new("UICorner")
 	local buttonTextLabel = Instance.new("TextLabel")
 	local buttonImageLabel = Instance.new("ImageLabel")
-	
+
 	button.Name = "Button"
 	button.BackgroundColor3 = self.colors.Button
 	button.BorderSizePixel = 0
@@ -332,20 +362,20 @@ function Tab:CreateButton(text, callback)
 	buttonImageLabel.Size = UDim2.new(0, 19, 0, 19)
 	buttonImageLabel.Image = "http://www.roblox.com/asset/?id=6026568225"
 	buttonImageLabel.ImageTransparency = 0.300
-	
+
 	button.MouseButton1Click:Connect(callback)
 	button.Parent = self.frame
-	
+
 	return button
 end
 
-function Tab:CreateToggle(text, state, callback)
+function Tab:CreateToggle(text: string, state: boolean, callback)
 	local toggle = Instance.new("Frame")
 	local toggleUICorner = Instance.new("UICorner")
 	local toggleTextLabel = Instance.new("TextLabel")
 	local toggleImageLabel = Instance.new("ImageLabel")
 	local toggleImageButton = Instance.new("ImageButton")
-	
+
 	toggle.Name = "Toggle"
 	toggle.BackgroundColor3 = self.colors.Toggle
 	toggle.Size = UDim2.new(0, 100, 0, 100)
@@ -380,38 +410,42 @@ function Tab:CreateToggle(text, state, callback)
 	toggleImageButton.Position = UDim2.new(0.829032242, 0, 0.0799999982, 0)
 	toggleImageButton.Size = UDim2.new(0, 20, 0, 20)
 	toggleImageButton.Image = "rbxassetid://"..(state and ToggleOn or ToggleOff)
-	
+
 	local toggleobj = setmetatable({state = state, toggle = toggle, callback = callback}, Toggle)
-	
+
 	toggleImageButton.MouseButton1Click:Connect(function()
 		toggleobj:SetState(not toggleobj.state)
 	end)
-	
+
 	toggle.Parent = self.frame
 	return toggleobj
 end
 
-function Toggle:SetState(state)
+function Toggle:SetState(state: boolean)
 	self.state = state
-	self.callback(state)
+	
+	if self.callback then
+		self.callback(state)
+	end
+	
 	self.toggle.Toggle.Image = "rbxassetid://"..(state and ToggleOn or ToggleOff)
 end
 
-function Tab:CreateSlider(text, minvalue, maxvalue, value, callback)
+function Tab:CreateSlider(text: string, minvalue: number, maxvalue: number, value: number, callback)
 	if value < minvalue or value > maxvalue then
 		return error("Value can't be less than minimum value or higher than maximum value")
 	end
-	
+
 	local slider = Instance.new("Frame")
 	local sliderUICorner = Instance.new("UICorner")
 	local sliderTextLabel = Instance.new("TextLabel")
-	
+
 	local sliderFrame = Instance.new("Frame")
 	local sliderFrameUICorner = Instance.new("UICorner")
 	local sliderImageButton = Instance.new("ImageButton")
 	local sliderValue = Instance.new("TextLabel")
 	local sliderImage = Instance.new("ImageLabel")
-	
+
 	slider.Name = "Slider"
 	slider.Parent = self.frame
 	slider.BackgroundColor3 = self.colors.Slider
@@ -468,56 +502,62 @@ function Tab:CreateSlider(text, minvalue, maxvalue, value, callback)
 	sliderImage.Size = UDim2.new(0, 19, 0, 19)
 	sliderImage.Image = "http://www.roblox.com/asset/?id=6031233863"
 	sliderImage.ImageTransparency = 0.300
-	
+
 	local sliderobj = setmetatable({imagebutton = sliderImageButton, slidervalue = sliderValue, callback = callback, minvalue = minvalue, maxvalue = maxvalue}, Slider)
 	sliderobj:SetValue(value)
-	
+
 	local dragging = false
-	
+
 	sliderImageButton.MouseButton1Down:Connect(function()
 		dragging = true
 	end)
-	
+
 	UserInput.InputChanged:Connect(function()
 		if dragging then
 			local mousePos = UserInput:GetMouseLocation() + Vector2.new(0, 36)
 			local relPos = mousePos - sliderFrame.AbsolutePosition
 			local precent = math.clamp(relPos.X / sliderFrame.AbsoluteSize.X, 0, 1)
 			local newvalue = util_lerp(minvalue, maxvalue, precent)
-			
+
 			sliderImageButton.Position = UDim2.new(precent, 0, sliderImageButton.Position.Y.Scale, 0)
 			sliderValue.Text = newvalue
-			callback(newvalue)
+			
+			if self.callback then
+				callback(newvalue)
+			end
 		end
 	end)
-	
-	UserInput.InputEnded:Connect(function(input)
+
+	UserInput.InputEnded:Connect(function(input: InputObject)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
 		end
 	end)
-	
+
 	return sliderobj
 end
 
-function Slider:SetValue(newvalue)
+function Slider:SetValue(newvalue: number)
 	if newvalue < self.minvalue or newvalue > self.maxvalue then
 		return error("Value can't be less than minimum value or higher than maximum value")
 	end
-	
+
 	self.imagebutton.Position = UDim2.new((newvalue - self.minvalue) / (self.maxvalue - self.minvalue), 0, self.imagebutton.Position.Y.Scale, 0)
 	self.slidervalue.Text = newvalue
-	self.callback(newvalue)
+	
+	if self.callback then
+		self.callback(newvalue)
+	end
 end
 
-function Tab:CreateTextBox(text, value, callback)
+function Tab:CreateTextBox(text: string, value: string, callback)
 	local mainFrame = Instance.new("Frame")
 	local mainFrameUICorner = Instance.new("UICorner")
 	local mainFrameTextLabel = Instance.new("TextLabel")
 	local mainFrameImageLabel = Instance.new("ImageLabel")
 	local mainFrameTextBox = Instance.new("TextBox")
 	local mainFrameTextBoxUICorner = Instance.new("UICorner")
-	
+
 	mainFrame.Name = "TextBox"
 	mainFrame.Parent = self.frame
 	mainFrame.BackgroundColor3 = self.colors.TextBox
@@ -562,18 +602,21 @@ function Tab:CreateTextBox(text, value, callback)
 
 	mainFrameTextBoxUICorner.CornerRadius = UDim.new(0.0900000036, 1)
 	mainFrameTextBoxUICorner.Parent = mainFrameTextBox
-	
+
 	mainFrameTextBox.FocusLost:Connect(function(enterPressed)
 		if enterPressed then
-			callback(mainFrameTextBox.Text)
+			if callback then
+				callback(mainFrameTextBox.Text)
+			end
+			
 			mainFrameTextBox.Text = ""
 		end
 	end)
-	
+
 	return setmetatable({textBox = mainFrameTextBox}, TextBox)
 end
 
-function TextBox:SetText(newtext)
+function TextBox:SetText(newtext: string)
 	self.textBox.Text = newtext
 end
 
